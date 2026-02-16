@@ -11,10 +11,10 @@ pipeline {
     }
 
     environment {
-       
+
         COMMIT_FILES = sh(script: 'git show --pretty="" --name-only', returnStdout: true).trim()
         REVISION = sh(script: 'git rev-parse', returnStdout: true).trim()
-        DOCKER_DEST = "gururepservice"
+        DOCKER_DEST = "stacksdemo"
         BMAJOR = "1"
         MICRO_SERVICE_NAME = "codlocker-assets"
     }
@@ -66,7 +66,7 @@ pipeline {
               {
                 "component_id": "codlocker-assets",
                 "artifact_type": "container-image",
-                "artifact_name": "gururepservice/codlocker-assets",
+                "artifact_name": "stacksdemo/codlocker-assets",
                 "reference": "${tag}",
                 "version": "${BMAJOR}.${BUILD_ID}",
                 "digest": "${digest}",
@@ -98,7 +98,7 @@ pipeline {
         
               echo "Registering artifact metadata in Unify..."
               registerBuildArtifactMetadata(
-                name: "gururepservice/${MICRO_SERVICE_NAME}",
+                name: "stacksdemo/${MICRO_SERVICE_NAME}",
                 url: "${reference}",
                 version: version,
                 digest: digest,
@@ -109,7 +109,7 @@ pipeline {
               // Optional: make it easy to see in Jenkins UI + keep a file artifact
               currentBuild.description = "v${version} • ${shortSha}"
               writeJSON file: 'unify-metadata.json', json: [
-                component      : "gururepservice/${MICRO_SERVICE_NAME}",
+                component      : "stacksdemo/${MICRO_SERVICE_NAME}",
                 version        : version,
                 sha_full       : fullSha,
                 sha_short      : shortSha,
