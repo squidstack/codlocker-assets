@@ -1,0 +1,92 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name: Universal CI - ${{ env.APP_NAME }}
+on:
+  push:
+    branches:
+      - "**"
+  workflow_dispatch:
+permissions:
+  scm-token-own: read
+  scm-token-org: read
+  id-token: write
+env:
+  APP_NAME: codlocker-assets
+  LANGUAGE: go
+  COVERAGE_ROOT: src
+  DEBUG: "true"  
+
+jobs:
+  test:
+    uses: github.com/squidstack/squidstack/.cloudbees/workflows/test-generic.yaml@main
+    with:
+      app_name: codlocker-assets
+      language: go
+      coverage_root: src
+      debug: "true"
+      enable_smart_tests: "true"
+    secrets: inherit
+    vars: inherit
+
+  build:
+    uses: github.com/squidstack/squidstack/.cloudbees/workflows/build-generic.yaml@main
+    with:
+      app_name: codlocker-assets
+      docker_user: ${{ vars.DOCKER_USER }}
+      commit_sha: ${{ cloudbees.scm.sha }}
+      push_latest: "true"
+    secrets:
+      docker_token: ${{ secrets.DOCKER_TOKEN }}
+    vars: inherit
+      
+  deployDev:
+    if: ${{ cloudbees.scm.branch != 'main' }}
+    environment: squid-dev
+    uses: github.com/squidstack/squidstack/.cloudbees/workflows/deploy-generic.yaml@main
+    needs: [test, build]
+    with:
+      environment_name: squid-dev
+      component_name: codlocker-assets
+      docker_repo: ${{ vars.DOCKER_USER }}/codlocker-assets
+      uses_postgres: "true"
+      uses_liquibase: "true"
+      artifact_id: ${{ needs.build.outputs.PRIMARY_ARTIFACT_ID }}
+      version: ${{ needs.build.outputs.VERSION }}
+      commit_sha: ${{ cloudbees.scm.sha }}
+      feature_flags_enabled: "true"
+    secrets: inherit
+    vars: inherit
+
+
+  deployPreProd:
+    if: ${{ cloudbees.scm.branch == 'main' }}
+    environment: squid-preprod
+    uses: github.com/squidstack/squidstack/.cloudbees/workflows/deploy-generic.yaml@main
+    needs: [test, build]
+    with:
+      environment_name: squid-preprod
+      component_name: codlocker-assets
+      docker_repo: ${{ vars.DOCKER_USER }}/codlocker-assets
+      uses_postgres: "true"
+      uses_liquibase: "true"
+      artifact_id: ${{ needs.build.outputs.PRIMARY_ARTIFACT_ID }}
+      version: ${{ needs.build.outputs.VERSION }}
+      commit_sha: ${{ cloudbees.scm.sha }}
+      feature_flags_enabled: "true"
+    secrets: inherit
+    vars: inherit
+
+  triggerRelease:
+    if: false  # Disabled to avoid Unify rate limits - change to 'cloudbees.scm.branch == main' to enable
+    needs: [test, build, deployPreProd]
+    uses: github.com/squidstack/squidstack/.cloudbees/workflows/release-generic.yaml@main
+    with:
+      component_name: codlocker-assets
+      component_id: "097aaa38-4753-4471-97f4-e7265bd7bdc8"
+      version: ${{ needs.build.outputs.VERSION }}
+      smart_tests_build_name: ${{ needs.test.outputs.SMART_TESTS_BUILD_NAME }}
+      environment: squid-demo-3
+      release_name_prefix: "cod"
+    secrets: inherit
+    vars: inherit
+
