@@ -48,8 +48,8 @@ jobs:
       environment_name: squid-dev
       component_name: codlocker-assets
       docker_repo: ${{ vars.DOCKER_USER }}/codlocker-assets
-      uses_postgres: "true"
-      uses_liquibase: "true"
+      uses_postgres: "false"
+      uses_liquibase: "false"
       artifact_id: ${{ needs.build.outputs.PRIMARY_ARTIFACT_ID }}
       version: ${{ needs.build.outputs.VERSION }}
       commit_sha: ${{ cloudbees.scm.sha }}
