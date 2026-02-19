@@ -84,7 +84,7 @@ pipeline {
           }
         }
 
-        stage('Artifact Registration') {
+        stage('Register Artifact in CloudBees Unify') {
           steps {
             script {
               def digestFile = "${env.WORKSPACE}/.kaniko.digest"
