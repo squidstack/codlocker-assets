@@ -66,7 +66,7 @@ pipeline {
               {
                 "component_id": "codlocker-assets",
                 "artifact_type": "container-image",
-                "artifact_name": "stacksdemo/codlocker-assets",
+                "artifact_name": "stacksdemo/codlocker-assets-legacy",
                 "reference": "${tag}",
                 "version": "${BMAJOR}.${BUILD_ID}",
                 "digest": "${digest}",
@@ -98,7 +98,7 @@ pipeline {
         
               echo "Registering artifact metadata in Unify..."
               registerBuildArtifactMetadata(
-                name: "stacksdemo/${MICRO_SERVICE_NAME}",
+                name: "stacksdemo/codlocker-assets-legacy",
                 url: "${reference}",
                 version: version,
                 digest: digest,
@@ -109,7 +109,7 @@ pipeline {
               // Optional: make it easy to see in Jenkins UI + keep a file artifact
               currentBuild.description = "v${version} • ${shortSha}"
               writeJSON file: 'unify-metadata.json', json: [
-                component      : "stacksdemo/${MICRO_SERVICE_NAME}",
+                component      : "stacksdemo/codlocker-assets-legacy",
                 version        : version,
                 sha_full       : fullSha,
                 sha_short      : shortSha,
